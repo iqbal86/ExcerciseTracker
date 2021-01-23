@@ -41,8 +41,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     boolean recordmode = false;
     TextView txtLat;
     String lat;
-    String provider;
+    String currentfilename;
     Location mylastlocation;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     recordmode=false;
                     toastMessage("Recording Finished!");
                     Intent intent = new Intent(MainActivity.this, ReportActivity.class);
+                    intent.putExtra("filename", currentfilename);
                     startActivity(intent);
 
                 }
@@ -101,6 +103,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         String filename= df.format(new Date())+".gpx";
+        currentfilename=filename; // storing the variable in global to pass on to next activity
         File file = new File (myDir, filename);
 
         try {
@@ -152,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
                                 toastMessage("Lat: " + mylastlocation.getLatitude() + " , Lon : " + mylastlocation.getLongitude() + " Alt: " + mylastlocation.getAltitude());
                                Location l=mylastlocation;
-                                String segment= "<trkpt lat=\"" + l.getLatitude() + "\" lon=\"" + l.getLongitude() + "\"><time>" + df.format(new Date(l.getTime())) + "</time></trkpt>\n";
+                                String segment= "<trkpt lat=\"" + l.getLatitude() + "\" lon=\"" + l.getLongitude() + "\"><ele>"+mylastlocation.getAltitude()+"</ele><time>" + df.format(new Date(l.getTime())) + "</time></trkpt>\n";
                                 try {
                                     writer.append(segment);
                                 } catch (IOException e) {
@@ -167,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             writer.append(getfilefooter());
                             writer.flush();
                             writer.close();
+
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
