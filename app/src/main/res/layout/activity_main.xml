@@ -19,5 +19,6 @@
         android:id="@+id/RecordButton"
         android:text="Start Recording"
          />
+
 </RelativeLayout>
 
