@@ -2,12 +2,16 @@ package com.example.excercisetracker;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.util.Xml;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -28,6 +32,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.RoundingMode;
@@ -53,6 +58,8 @@ public class ReportActivity extends AppCompatActivity {
     Double minalt, maxalt;
     private TextView timeTaken, distanceCovered, maxAlt, minAlt, averageSpeed;
     private LinearLayout chartContainer;
+    private LinearLayout mainView;
+    private Button saveChart;
     List<Point> points = new ArrayList<>();
     private static final SimpleDateFormat gpxDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
@@ -67,6 +74,11 @@ public class ReportActivity extends AppCompatActivity {
         averageSpeed = this.<TextView>findViewById(R.id.average_speed);
         maxAlt = this.<TextView>findViewById(R.id.max_altitude);
         minAlt = this.<TextView>findViewById(R.id.min_altitude);
+        saveChart = findViewById(R.id.saveChart);
+        saveChart.setOnClickListener(v -> {
+            saveChartAsImage();
+        });
+        mainView = findViewById(R.id.mainView);
         toastMessage(currentfilename.toString());
         String path = Environment.getExternalStorageDirectory().toString() + "/GPStracks/" + currentfilename;
         File gpxFile = new File(path);
@@ -81,6 +93,18 @@ public class ReportActivity extends AppCompatActivity {
                 }
             });
         } catch (SAXParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveChartAsImage() {
+        String root = Environment.getExternalStorageDirectory().toString();
+        File file = new File(root + "/GPStracks/" + new Date().getTime() + ".jpg");
+        Bitmap b = mainView.getDrawingCache();
+        try {
+            b.compress(Bitmap.CompressFormat.JPEG, 95, new FileOutputStream(file.getPath()));
+            toastMessage("Saved!");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -121,12 +145,22 @@ public class ReportActivity extends AppCompatActivity {
         averageSpeed.setText(String.valueOf(df.format(averagespeed)) + " m/s");
         minAlt.setText(df.format(minalt).toString());
         maxAlt.setText(df.format(maxalt).toString());
-        buildChart();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                buildChart();
+            }
+        });
     }
 
     private void buildChart() {
         chartContainer.removeAllViews();
-        chartContainer.setDrawingCacheEnabled(true);
+        mainView.setDrawingCacheEnabled(true);
         ChartView chart = new ChartView(this, points);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         params.setMargins(50, 50, 50, 50);
