@@ -211,7 +211,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             Intent intent = new Intent(MainActivity.this, ReportActivity.class);
             intent.putExtra("filename", currentfilename);
             startActivity(intent);
-            finish();
         });
     }
 

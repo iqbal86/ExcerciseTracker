@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.util.Xml;
+import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,50 +52,50 @@ public class ReportActivity extends AppCompatActivity {
     float timeinseconds;
     Double minalt, maxalt;
     private TextView timeTaken, distanceCovered, maxAlt, minAlt, averageSpeed;
+    private LinearLayout chartContainer;
+    List<Point> points = new ArrayList<>();
     private static final SimpleDateFormat gpxDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_report);
-
         currentfilename = getIntent().getStringExtra("filename");
-
-        timeTaken = this.<TextView>findViewById(R.id.total_time);
-        distanceCovered = this.<TextView>findViewById(R.id.total_distance);
+        chartContainer = findViewById(R.id.chartContainer);
+        timeTaken = findViewById(R.id.total_time);
+        distanceCovered = this.findViewById(R.id.total_distance);
         averageSpeed = this.<TextView>findViewById(R.id.average_speed);
         maxAlt = this.<TextView>findViewById(R.id.max_altitude);
         minAlt = this.<TextView>findViewById(R.id.min_altitude);
-
         toastMessage(currentfilename.toString());
         String path = Environment.getExternalStorageDirectory().toString() + "/GPStracks/" + currentfilename;
-        //String path = Environment.getExternalStorageDirectory().toString() + "/GPStracks/demo.gpx";
-
         File gpxFile = new File(path);
-
-        new Thread(() -> {
-            try {
-                userlocations = readGpxFile(gpxFile);
-                this.runOnUiThread(() -> {
-                    if (userlocations.size() > 0) {
-                        calculatevalues();
-                        updateview();
-                    } else {
-                        toastMessage("No data available in file");
-                    }
-                });
-            } catch (SAXParseException e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-
+        try {
+            userlocations = readGpxFile(gpxFile);
+            this.runOnUiThread(() -> {
+                if (userlocations.size() > 0) {
+                    calculatevalues();
+                    updateview();
+                } else {
+                    toastMessage("No data available in file");
+                }
+            });
+        } catch (SAXParseException e) {
+            e.printStackTrace();
+        }
     }
 
     private void calculatevalues() {
         totaldistance = 0;
+        long baseTime = userlocations.get(0).getTime();
         for (int i = 0; i < userlocations.size() - 2; i++) {
-            totaldistance = totaldistance + userlocations.get(i).distanceTo(userlocations.get(i + 1));
+            long distanceInTwoPoints = (long) userlocations.get(i).distanceTo(userlocations.get(i + 1));
+            long time = (userlocations.get(i + 1).getTime() - baseTime) / 1000;
+            Point p = new Point(time, distanceInTwoPoints);
+            p.setxAxis(p.getxAxis());// seconds to Hour
+            p.setyAxis(p.getyAxis());// meters to KM
+            points.add(p);
+            totaldistance = totaldistance + distanceInTwoPoints;
         }
         totaltime = userlocations.get(userlocations.size() - 1).getTime() - userlocations.get(0).getTime();
         timeinseconds = totaltime / 1000;
@@ -110,6 +112,7 @@ public class ReportActivity extends AppCompatActivity {
         }
     }
 
+
     private void updateview() {
         DecimalFormat df = new DecimalFormat("#.####");
         df.setRoundingMode(RoundingMode.CEILING);
@@ -118,6 +121,17 @@ public class ReportActivity extends AppCompatActivity {
         averageSpeed.setText(String.valueOf(df.format(averagespeed)) + " m/s");
         minAlt.setText(df.format(minalt).toString());
         maxAlt.setText(df.format(maxalt).toString());
+        buildChart();
+    }
+
+    private void buildChart() {
+        chartContainer.removeAllViews();
+        chartContainer.setDrawingCacheEnabled(true);
+        ChartView chart = new ChartView(this, points);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        params.setMargins(50, 50, 50, 50);
+        chart.setLayoutParams(params);
+        chartContainer.addView(chart);
     }
 
     private List<Location> readGpxFile(File file) throws SAXParseException {
@@ -147,9 +161,7 @@ public class ReportActivity extends AppCompatActivity {
                     Node el = nList.item(j);
                     if (el.getNodeName().equals("ele")) {
                         newLocation.setAltitude(Double.parseDouble(el.getTextContent()));
-
                     } else if (el.getNodeName().equals("time")) {
-
                         try {
                             Date d = sdf.parse(el.getTextContent());
                             newLocation.setTime(d.getTime());
