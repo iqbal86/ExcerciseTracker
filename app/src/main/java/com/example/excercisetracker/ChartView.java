@@ -72,7 +72,7 @@ public class ChartView extends View {
         chartDrawable = new ShapeDrawable();
         updateDrawables();
     }
-
+    // redraw the graph
     public void updateDrawables() {
         drawXLabels(xLabelDrawable);
         drawYLabels(yLabelDrawable);
@@ -86,7 +86,7 @@ public class ChartView extends View {
         xLabelDrawable.draw(canvas);
         chartDrawable.draw(canvas);
     }
-
+    // draw the labels on Y axis
     protected void drawYLabels(ShapeDrawable labelDrawable) {
         Shape labelsShape = new Shape() {
             @Override
@@ -96,7 +96,7 @@ public class ChartView extends View {
                 labelPaint.setColor(chartStyle.getLabelTextColor());
                 long minY = getMinY();
                 long maxY = getMaxY();
-                long yrange = maxY - minY;
+                long yrange = maxY - minY; // range of values on Y axis
                 float height = getHeight();
 
                 float left = getYLabelWidth();
@@ -144,18 +144,18 @@ public class ChartView extends View {
         }
         return String.format("%,d", y);
     }
-
+    // draw the labels of X axis
     protected void drawXLabels(ShapeDrawable labelDrawable) {
         Shape labelsShape = new Shape() {
             @Override
-            public void draw(Canvas canvas, Paint paint) {
+            public void draw(Canvas canvas, Paint paint) { // define the shape of labels
                 labelPaint.setTextAlign(Paint.Align.CENTER);
                 labelPaint.setTextSize(chartStyle.getLabelTextSize());
                 labelPaint.setColor(chartStyle.getLabelTextColor());
 
                 long minX = getMinX();
                 long maxX = getMaxX();
-                long xrange = maxX - minX;
+                long xrange = maxX - minX; // range of values of X axis
 
                 float width = getWidth();
                 float height = getHeight();
@@ -316,7 +316,7 @@ public class ChartView extends View {
         if (chartPoints.isEmpty()) {
             return 0;
         }
-        return chartPoints.get(0).getxAxis();
+        return chartPoints.get(0).getxAxis(); // returns the first value in the list
     }
 
     public void clearManualMaxX(){
@@ -328,7 +328,7 @@ public class ChartView extends View {
         manualMaxX = maxX;
         updateDrawables();
     }
-
+    // gets the maximum value of X
     public long getMaxX() {
         if (manualMaxX != null) {
             return manualMaxX;
@@ -483,6 +483,7 @@ public class ChartView extends View {
         }
     }
 
+    // function to draw the X grid
     protected void drawXGrid(Canvas canvas, long minX, long xrange) {
         long maxX = getMaxX();
         long xGridUnit = getXGridUnit();
@@ -505,6 +506,7 @@ public class ChartView extends View {
         }
     }
 
+    // function to draw the Y grid
     protected void drawYGrid(Canvas canvas, long minY, long yrange) {
         long yGridUnit = getYGridUnit();
         long maxY = getMaxY();
@@ -525,7 +527,7 @@ public class ChartView extends View {
             y += yGridUnit;
         }
     }
-
+    // function to draw the graph line.
     protected void drawLines(Canvas canvas, long minX, long xrange, long minY, long yrange) {
         Point prevPoint = null;
         float px = 0.0f, py = 0.0f;
@@ -546,7 +548,7 @@ public class ChartView extends View {
             py = y;
         }
     }
-
+// function to draw points on the graph
     protected void drawPoints(Canvas canvas, long minX, long xrange, long minY, long yrange) {
         float width = getWidth();
         float height = getHeight();
@@ -653,17 +655,19 @@ public class ChartView extends View {
         updateDrawables();
     }
 
+    // calculate the minimum values of grid axis
     protected long calcMinGridValue(long min, long gridUnit) {
         return (long) (Math.ceil(1.0 * min / gridUnit) * gridUnit);
     }
 
+    // getter function of label width
     public float getYLabelWidth() {
         if (chartStyle.getYLabelWidth() != ChartStyle.AutoWidth) {
             return chartStyle.getYLabelWidth();
         }
         return yLabelWidth;
     }
-
+    // getter function of label heigh
     public float getXLabelHeight() {
         if (chartStyle.getXLabelHeight() != ChartStyle.AutoHeight) {
             return chartStyle.getXLabelHeight();
@@ -674,7 +678,7 @@ public class ChartView extends View {
     public ChartStyle getStyle() {
         return chartStyle;
     }
-
+// setter function of char style for axis labels
     public void setStyle(ChartStyle chartStyle) {
         this.chartStyle = chartStyle;
         updateDrawables();
